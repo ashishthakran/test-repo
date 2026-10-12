@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stagr presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b3d5c; --navy-deep:#072a40; --navy2:#12506f;
+  --teal:#1a9b8a; --teal-l:#e6f5f2; --teal-b:#9fd8cd; --teal-bright:#5fd3c1;
+  --amber:#d9821c; --amber-l:#fff3e0; --amber-b:#f2c27d; --amber-d:#8a5300;
+  --green:#2f8a4a; --green-l:#e6f4ea; --green-b:#9fd1ad; --green-d:#1f5f33;
+  --red:#c0392b; --red-l:#fdecea; --red-b:#efb3ac; --red-d:#8f2d2d;
+  --violet:#6b4fb3; --violet-l:#f1edfa; --violet-b:#c9bdea; --violet-d:#45317f;
+  --ink:#16293a; --muted:#5b6b78; --line:#dbe4ea; --soft:#f3f7fa; --paper:#fbfdfe;
+  --sans:"Inter","Helvetica Neue",Arial,"Liberation Sans","DejaVu Sans",sans-serif;
+  --mono:"JetBrains Mono","DejaVu Sans Mono","Liberation Mono",Menlo,monospace;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; height:100%; background:#0a1f2e; overflow:hidden; font-family:var(--sans); color:var(--ink); }
+#viewport{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+#stage{ position:absolute; left:50%; top:50%; width:1920px; height:1080px; transform-origin:0 0; }
+.slide{ position:absolute; inset:0; width:1920px; height:1080px; background:var(--paper); padding:84px 110px 90px;
+  opacity:0; visibility:hidden; transition:opacity .45s ease, visibility 0s linear .45s; overflow:hidden; }
+.slide.active{ opacity:1; visibility:visible; transition:opacity .45s ease; z-index:2; }
+.slide.dark{ background:radial-gradient(1200px 800px at 85% 15%, #11506f 0%, var(--navy) 45%, var(--navy-deep) 100%); color:#fff; }
+.notes{ display:none; }
+
+/* type */
+.eyebrow{ font-size:22px; font-weight:700; letter-spacing:4px; text-transform:uppercase; color:var(--teal); margin-bottom:18px; display:flex; align-items:center; gap:18px; }
+.eyebrow .n{ color:var(--navy); opacity:.35; }
+h2{ font-size:64px; line-height:1.08; margin:0 0 26px; color:var(--navy); font-weight:800; letter-spacing:-1.2px; max-width:1600px; }
+.dark h2{ color:#fff; }
+.lead{ font-size:30px; line-height:1.45; color:#35505f; margin:0 0 30px; max-width:1500px; }
+p{ margin:0; }
+code,.mono{ font-family:var(--mono); }
+code{ font-size:.86em; background:var(--soft); border:1px solid var(--line); border-radius:6px; padding:1px 8px; color:var(--navy); }
+.dark code{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18); color:#bfeee6; }
+b,strong{ color:var(--navy); }
+.dark b,.dark strong{ color:#fff; }
+.foot{ position:absolute; left:110px; right:110px; bottom:40px; display:flex; justify-content:space-between; font-size:17px; color:#93a3ae; letter-spacing:.5px; }
+.dark .foot{ color:rgba(255,255,255,.45); }
+
+/* badges */
+.badge{ display:inline-flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:2.5px; padding:8px 18px; border-radius:30px; }
+.badge.vision{ background:var(--violet); color:#fff; box-shadow:0 0 0 6px rgba(107,79,179,.15); }
+.badge.road{ background:#fdebc8; color:var(--amber-d); }
+.badge.ship{ background:#d4efe9; color:#0f6b5e; }
+.vision-corner{ position:absolute; top:70px; right:110px; }
+.pill{ display:inline-block; font-size:17px; font-weight:700; padding:3px 14px; border-radius:20px; white-space:nowrap; }
+.p-ship{ background:#d4efe9; color:#0f6b5e; } .p-road{ background:#fdebc8; color:var(--amber-d); } .p-des{ background:#dfe9f3; color:var(--navy2); }
+
+/* cards */
+.grid{ display:grid; gap:28px; }
+.g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:repeat(3,1fr); } .g4{ grid-template-columns:repeat(4,1fr); }
+.card{ background:#fff; border:1.5px solid var(--line); border-radius:20px; padding:30px 34px; box-shadow:0 6px 24px rgba(11,61,92,.06); }
+.card h3{ margin:0 0 10px; font-size:30px; color:var(--navy); font-weight:700; letter-spacing:-.3px; }
+.card p{ font-size:23px; line-height:1.45; color:#40525f; }
+.card.t{ border-top:6px solid var(--teal); } .card.am{ border-top:6px solid var(--amber); } .card.g{ border-top:6px solid var(--green); }
+.card.v{ border-top:6px solid var(--violet); } .card.r{ border-top:6px solid var(--red); } .card.n{ border-top:6px solid var(--navy); }
+
+/* animation system: default CSS = final state; keyframes only while active */
+.slide.active .a{ animation:rise .7s cubic-bezier(.2,.7,.2,1) both; animation-delay:var(--d,0s); }
+.slide.active .a-fade{ animation:fade .7s ease both; animation-delay:var(--d,0s); }
+.slide.active .a-pop{ animation:pop .55s cubic-bezier(.2,1.4,.4,1) both; animation-delay:var(--d,0s); }
+.slide.active .a-left{ animation:fromleft .7s cubic-bezier(.2,.7,.2,1) both; animation-delay:var(--d,0s); }
+.slide.active .a-flip{ animation:flip .8s cubic-bezier(.2,.7,.2,1) both; animation-delay:var(--d,0s); }
+.slide.active .a-draw{ stroke-dasharray:var(--len,2000); animation:draw 1.2s ease both; animation-delay:var(--d,0s); }
+.slide.active .flip-from{ animation:outlate .35s ease both; animation-delay:var(--d,0s); }
+.slide.active .flip-to{ animation:fade .35s ease both; animation-delay:var(--d,0s); }
+.flip-from{ opacity:0; }
+@keyframes rise{ from{ opacity:0; transform:translateY(34px);} to{ opacity:1; transform:none;} }
+@keyframes fade{ from{ opacity:0;} to{ opacity:1;} }
+@keyframes pop{ from{ opacity:0; transform:scale(.6);} to{ opacity:1; transform:none;} }
+@keyframes fromleft{ from{ opacity:0; transform:translateX(-40px);} to{ opacity:1; transform:none;} }
+@keyframes flip{ from{ opacity:0; transform:perspective(900px) rotateY(-80deg);} to{ opacity:1; transform:none;} }
+@keyframes draw{ from{ stroke-dashoffset:var(--len,2000);} to{ stroke-dashoffset:0;} }
+@keyframes outlate{ from{ opacity:1;} to{ opacity:0;} }
+svg .a, svg .a-pop, svg .a-fade{ transform-box:fill-box; transform-origin:center; }
+
+/* nav UI */
+#ui{ position:fixed; left:0; right:0; bottom:14px; display:flex; justify-content:center; align-items:center; gap:14px; z-index:20; pointer-events:none; }
+#dots{ display:flex; gap:8px; background:rgba(7,42,64,.72); padding:9px 14px; border-radius:20px; pointer-events:auto; backdrop-filter:blur(6px); }
+#dots button{ width:11px; height:11px; border-radius:50%; border:0; padding:0; background:rgba(255,255,255,.35); cursor:pointer; transition:transform .2s, background .2s; }
+#dots button.on{ background:var(--teal-bright); transform:scale(1.35); }
+#dots button.vis{ box-shadow:0 0 0 2px rgba(167,140,235,.8); }
+.navbtn{ pointer-events:auto; border:0; background:rgba(7,42,64,.72); color:#fff; width:34px; height:34px; border-radius:50%; font-size:17px; cursor:pointer; }
+#counter{ position:fixed; right:18px; bottom:18px; color:rgba(255,255,255,.75); background:rgba(7,42,64,.72); padding:6px 12px; border-radius:14px; font-size:14px; z-index:20; font-variant-numeric:tabular-nums; }
+#hint{ position:fixed; left:18px; bottom:18px; color:rgba(255,255,255,.6); background:rgba(7,42,64,.6); padding:6px 12px; border-radius:14px; font-size:13px; z-index:20; }
+#notesPanel{ position:fixed; left:0; right:0; bottom:0; max-height:36vh; overflow:auto; background:rgba(5,24,37,.96); color:#e4eef3; z-index:30; padding:18px 28px 60px; font-size:16px; line-height:1.55; transform:translateY(100%); transition:transform .3s ease; border-top:3px solid var(--teal); }
+body.notes-on #notesPanel{ transform:none; }
+#notesPanel h4{ margin:0 0 8px; color:var(--teal-bright); font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+#notesPanel ul{ margin:0; padding-left:20px; } #notesPanel li{ margin:4px 0; }
+#notesPanel code{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15); color:#bfeee6; }
+
+html.clean #ui, html.clean #counter, html.clean #hint{ display:none; }
+/* static / reduced motion: show final state only */
+html.static *, html.static *::before, html.static *::after{ animation:none !important; transition:none !important; }
+@media (prefers-reduced-motion: reduce){ *, *::before, *::after{ animation:none !important; transition:none !important; } }
+
+/* ---------- slide specific ---------- */
+/* title */
+.title-wrap{ position:absolute; left:130px; top:170px; right:130px; }
+.title-wrap .kicker{ font-size:24px; letter-spacing:6px; text-transform:uppercase; color:var(--teal-bright); font-weight:700; }
+.title-wrap h1{ font-size:190px; margin:20px 0 0; line-height:.95; letter-spacing:-6px; font-weight:800; color:#fff; }
+.title-wrap .sub{ font-size:52px; font-weight:600; color:#d7ebf2; margin-top:22px; letter-spacing:-.6px; }
+.title-wrap .sub2{ font-size:30px; color:#9cc4d4; margin-top:30px; }
+.title-wrap .sub2 span{ color:#cdb9ff; font-weight:600; }
+.title-chips{ position:absolute; left:130px; bottom:150px; display:flex; gap:18px; }
+.tchip{ font-family:var(--mono); font-size:22px; padding:12px 22px; border-radius:40px; border:2px solid rgba(255,255,255,.18); color:#d9eef0; background:rgba(255,255,255,.05); }
+.tchip.ok{ border-color:#64c789; color:#bdf0cc; background:rgba(47,138,74,.18); }
+.title-wrap .sub3{ font-size:24px; color:rgba(255,255,255,.55); margin-top:14px; }
+.title-date{ position:absolute; right:130px; bottom:158px; font-size:22px; color:rgba(255,255,255,.6); text-align:right; line-height:1.5; }
+.title-art{ position:absolute; right:60px; top:60px; width:760px; opacity:.9; }
+
+/* problem */
+.qgrid{ display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px; }
+.q{ display:flex; gap:26px; align-items:center; background:#fff; border:1.5px solid var(--line); border-radius:22px; padding:34px 36px; box-shadow:0 6px 24px rgba(11,61,92,.06); }
+.q .mark{ flex:0 0 74px; height:74px; border-radius:50%; background:var(--red-l); color:var(--red); font-size:46px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid var(--red-b); }
+.q p{ font-size:33px; line-height:1.3; font-weight:600; color:var(--navy); }
+.bottomline{ margin-top:46px; font-size:32px; color:#35505f; border-left:6px solid var(--red); padding:6px 0 6px 28px; }
+
+/* rule banner */
+.rule{ margin-top:46px; background:var(--navy); color:#fff; border-radius:22px; padding:34px 44px; display:flex; gap:40px; align-items:center; }
+.rule .big{ font-size:42px; font-weight:800; letter-spacing:-.5px; white-space:nowrap; }
+.rule .big span{ color:var(--teal-bright); }
+.rule p{ font-size:25px; line-height:1.45; color:#cfe3ec; }
+.rule p b{ color:#fff; }
+.nots{ display:flex; gap:18px; margin-top:34px; flex-wrap:wrap; }
+.nots span{ font-size:24px; font-weight:600; color:var(--red-d); background:var(--red-l); border:1.5px solid var(--red-b); border-radius:30px; padding:10px 24px; }
+.nots span:before{ content:"✕  "; }
+
+/* config slide */
+.cfgwrap{ display:grid; grid-template-columns:860px 120px 1fr; gap:0; align-items:start; }
+pre.cfg{ margin:0; background:#0d2433; color:#d7e6ee; border-radius:20px; padding:30px 32px; font-family:var(--mono); font-size:20.5px; line-height:1.55; box-shadow:0 14px 40px rgba(7,42,64,.25); white-space:pre; }
+pre.cfg .c{ color:#7fa3b8; } pre.cfg .k{ color:#7fd6c7; } pre.cfg .v{ color:#f3d9a4; }
+.cfg-title{ font-family:var(--mono); font-size:18px; color:#7fa3b8; margin-bottom:10px; }
+.wfcard{ display:flex; align-items:center; gap:18px; background:#fff; border:1.5px solid var(--line); border-left:7px solid var(--teal); border-radius:14px; padding:16px 22px; margin-bottom:14px; }
+.wfcard .fn{ font-family:var(--mono); font-size:21px; color:var(--navy); font-weight:600; min-width:330px; }
+.wfcard .what{ font-size:20px; color:#4a5b67; line-height:1.35; }
+.wfcard.am{ border-left-color:var(--amber); } .wfcard.gr{ border-left-color:var(--green); } .wfcard.nv{ border-left-color:var(--navy); }
+.cmdrow{ display:flex; gap:14px; margin-top:30px; align-items:center; flex-wrap:wrap; }
+.cmd{ font-family:var(--mono); font-size:21px; padding:10px 18px; border-radius:12px; background:var(--teal-l); color:#0f6b5e; border:1.5px solid var(--teal-b); }
+.cmd.plan{ background:#fff4e3; color:var(--amber-d); border:1.5px dashed var(--amber-b); }
+
+/* lane */
+.lane-legend{ display:flex; gap:34px; margin-top:6px; font-size:22px; color:#4a5b67; }
+.lane-legend span{ display:inline-flex; align-items:center; gap:10px; }
+.lane-legend i{ width:20px; height:20px; border-radius:5px; display:inline-block; }
+.slide.active #token{ animation:tokenmove 7.2s cubic-bezier(.45,.05,.4,1) both .4s; }
+@keyframes tokenmove{
+  0%{ transform:translate(150px,250px);} 10%{ transform:translate(420px,250px);} 22%{ transform:translate(745px,250px);}
+  30%{ transform:translate(745px,250px);} 37%{ transform:translate(745px,470px);} 44%{ transform:translate(745px,470px);}
+  51%{ transform:translate(745px,250px);} 58%{ transform:translate(745px,250px);} 68%{ transform:translate(1085px,250px);}
+  76%{ transform:translate(1085px,250px);} 86%{ transform:translate(1420px,250px);} 92%{ transform:translate(1420px,250px);}
+  100%{ transform:translate(1583px,250px);} }
+#token{ transform:translate(1583px,250px); }
+
+/* trust */
+.gatecol{ display:grid; grid-template-columns:900px 1fr; gap:56px; }
+.cond{ display:flex; gap:22px; align-items:flex-start; margin-bottom:20px; }
+.cond .ck{ flex:0 0 46px; height:46px; border-radius:50%; background:var(--teal); color:#fff; font-size:26px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+.cond h4{ margin:0 0 4px; font-size:28px; color:var(--navy); }
+.cond p{ font-size:22px; color:#4a5b67; line-height:1.4; }
+.tiles{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.tile{ background:#fff; border:1.5px solid var(--line); border-radius:18px; padding:22px 24px; }
+.tile h4{ margin:0 0 6px; font-size:24px; color:var(--navy); display:flex; align-items:center; gap:10px; }
+.tile p{ font-size:19.5px; color:#4a5b67; line-height:1.4; }
+.tile .ic{ width:14px; height:14px; border-radius:4px; background:var(--teal); display:inline-block; }
+.forge{ margin-top:20px; background:var(--red-l); border:1.5px solid var(--red-b); border-radius:18px; padding:20px 24px; font-size:21px; color:var(--red-d); line-height:1.4; }
+
+/* field test */
+.repo{ background:var(--navy); color:#fff; border-radius:24px; padding:40px 44px; }
+.repo .nm{ font-family:var(--mono); font-size:27px; color:#bfeee6; word-break:break-all; }
+.repo .tag{ font-size:24px; color:#cfe3ec; margin-top:14px; }
+.bignum{ display:flex; gap:26px; margin-top:28px; }
+.bignum div{ flex:1; background:rgba(255,255,255,.07); border-radius:18px; padding:20px 24px; }
+.bignum b{ display:block; font-size:72px; color:#fff; line-height:1; font-weight:800; }
+.bignum span{ font-size:20px; color:#a9c8d6; }
+.path{ display:flex; align-items:center; gap:14px; margin-top:28px; flex-wrap:wrap; }
+.path .st{ font-family:var(--mono); font-size:21px; padding:10px 16px; border-radius:12px; background:rgba(255,255,255,.08); color:#e1f1f5; }
+.path .ar{ color:var(--teal-bright); font-size:26px; }
+.sqlcard{ background:#fff; border:1.5px solid var(--line); border-radius:24px; padding:34px 36px; }
+.sqlcard .lbl{ font-size:18px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.inj{ font-family:var(--mono); font-size:44px; color:var(--red); background:var(--red-l); border-radius:14px; padding:12px 20px; display:inline-block; margin:6px 0 14px; }
+.commit{ font-family:var(--mono); font-size:19px; background:var(--amber-l); border:1.5px solid var(--amber-b); color:#6b4a14; border-radius:12px; padding:12px 16px; line-height:1.4; }
+
+/* timeline */
+.tlwrap{ display:grid; grid-template-columns:1050px 1fr; gap:46px; }
+.tl{ position:relative; padding-left:54px; }
+.tl:before{ content:""; position:absolute; left:17px; top:14px; bottom:14px; width:4px; background:var(--line); border-radius:2px; }
+.ev{ position:relative; margin-bottom:17px; }
+.ev .dot{ position:absolute; left:-54px; top:4px; width:38px; height:38px; border-radius:50%; background:#fff; border:5px solid var(--navy); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:var(--navy); }
+.ev.cx .dot{ border-color:var(--green); color:var(--green); } .ev.cl .dot{ border-color:var(--amber); color:var(--amber); } .ev.ok .dot{ border-color:var(--teal); background:var(--teal); color:#fff; }
+.who{ font-size:16px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
+.who.cx{ color:var(--green); } .who.cl{ color:var(--amber); } .who.dv{ color:var(--navy); } .who.ok{ color:var(--teal); }
+.ev p{ font-size:23px; line-height:1.38; color:#2c3f4c; margin-top:2px; }
+.ev .cm{ font-family:var(--mono); font-size:19px; background:var(--amber-l); border:1.5px solid var(--amber-b); color:#6b4a14; border-radius:10px; padding:5px 12px; display:inline-block; margin-top:4px; }
+.finalcard{ background:#fff; border:1.5px solid var(--line); border-radius:22px; padding:30px 32px; }
+.finalcard h3{ margin:0 0 18px; font-size:26px; color:var(--navy); }
+.crun{ display:flex; align-items:center; gap:14px; font-family:var(--mono); font-size:17.5px; white-space:nowrap; padding:12px 16px; border-radius:12px; background:var(--green-l); border:1.5px solid var(--green-b); color:var(--green-d); margin-bottom:12px; }
+.crun .c{ width:30px; height:30px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--sans); font-weight:800; font-size:18px; flex:0 0 30px; }
+.crun.big{ background:var(--green); color:#fff; border-color:var(--green); font-weight:700; }
+.crun.big .c{ background:#fff; color:var(--green); }
+.snippet{ margin-top:18px; font-family:var(--mono); font-size:17px; background:#0d2433; color:#d7e6ee; border-radius:14px; padding:16px 18px; line-height:1.5; }
+.snippet .k{ color:#7fd6c7; } .snippet .s{ color:#f3d9a4; }
+.human{ margin-top:16px; font-size:22px; color:var(--navy); font-weight:600; display:flex; gap:12px; align-items:center; }
+
+/* glitches */
+.gl{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; margin-top:8px; }
+.gcard{ background:#fff; border:1.5px solid var(--line); border-radius:22px; overflow:hidden; display:flex; flex-direction:column; }
+.gcard .bug{ background:var(--red-l); padding:24px 26px; border-bottom:1.5px solid var(--red-b); min-height:270px; }
+.gcard .fix{ background:#fff; padding:24px 26px; flex:1; }
+.gcard .lbl{ font-size:16px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.gcard .bug .lbl{ color:var(--red); } .gcard .fix .lbl{ color:var(--teal); }
+.gcard p{ font-size:21.5px; line-height:1.4; color:#33434f; }
+.gcard .ver{ margin-top:14px; display:inline-block; font-family:var(--mono); font-size:22px; font-weight:600; color:#0f6b5e; background:#d4efe9; border-radius:12px; padding:5px 14px; }
+.selfbug{ margin-top:28px; display:flex; gap:22px; align-items:center; background:var(--green-l); border:1.5px solid var(--green-b); border-radius:18px; padding:20px 28px; font-size:24px; color:var(--green-d); }
+.selfbug b{ color:var(--green-d); }
+
+/* stats */
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:28px; margin-top:16px; }
+.stat{ background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.12); border-radius:24px; padding:34px 30px; }
+.stat b{ display:block; font-size:96px; line-height:1; color:#fff; font-weight:800; letter-spacing:-3px; font-variant-numeric:tabular-nums; }
+.stat span{ display:block; font-size:24px; color:#a9c8d6; margin-top:12px; }
+.rel{ margin-top:48px; }
+.rel .lbl{ font-size:20px; color:#a9c8d6; letter-spacing:2px; text-transform:uppercase; margin-bottom:64px; }
+.relrow{ display:flex; align-items:center; position:relative; }
+.relrow:before{ content:""; position:absolute; left:0; right:0; top:50%; height:3px; background:rgba(95,211,193,.35); }
+.rv{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; }
+.rv i{ width:22px; height:22px; border-radius:50%; background:var(--teal-bright); box-shadow:0 0 0 6px rgba(95,211,193,.18); display:block; }
+.rv span{ font-family:var(--mono); font-size:18px; color:#d7ebf2; position:absolute; top:34px; white-space:nowrap; }
+.rv:nth-child(even) span{ top:auto; bottom:34px; }
+.loop3{ display:flex; gap:20px; margin-top:96px; align-items:center; font-size:30px; font-weight:600; }
+.loop3 .r{ padding:14px 26px; border-radius:16px; }
+
+/* state table */
+table.st{ width:100%; border-collapse:separate; border-spacing:0; font-size:21px; border-radius:18px; overflow:hidden; border:1.5px solid var(--line); background:#fff; }
+table.st th{ background:var(--navy); color:#fff; text-align:left; padding:16px 22px; font-size:21px; }
+table.st td{ padding:11px 22px; border-top:1px solid var(--line); vertical-align:top; line-height:1.35; color:#33434f; }
+table.st td:first-child{ font-weight:700; color:var(--navy); white-space:nowrap; }
+table.st td.sh{ background:#f4fbf9; } table.st td.rd{ background:#fffaf1; }
+table.st code{ font-size:18px; padding:0 6px; }
+
+/* roadmap */
+.rm{ display:grid; grid-template-columns:repeat(3,1fr); gap:26px; }
+.rm .card{ padding:28px 30px; }
+.rm .card h3{ font-size:28px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.rm .card ul{ margin:8px 0 0; padding-left:24px; font-size:21.5px; line-height:1.42; color:#40525f; }
+.rm .card li{ margin:6px 0; }
+
+/* codeguard */
+.planes{ display:grid; grid-template-columns:1080px 1fr; gap:50px; align-items:start; }
+.side .card{ margin-bottom:24px; }
+.res{ display:flex; gap:12px; margin-top:14px; }
+.res span{ flex:1; text-align:center; font-size:22px; font-weight:700; padding:12px 0; border-radius:12px; background:var(--violet-l); color:var(--violet-d); border:1.5px solid var(--violet-b); }
+.slide.active .nb{ animation:nbpulse 1.6s ease-in-out infinite; animation-delay:var(--d,0s); }
+@keyframes nbpulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.18);} }
+.slide.active .msg{ animation:msg 1.8s linear infinite; animation-delay:var(--d,0s); }
+@keyframes msg{ 0%{ transform:translateX(0); opacity:0;} 15%{opacity:1;} 85%{opacity:1;} 100%{ transform:translateX(70px); opacity:0;} }
+.msg{ opacity:0; }
+.joints{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-top:10px; }
+.joint{ background:#fff; border:1.5px solid var(--line); border-radius:22px; padding:30px 32px; position:relative; }
+.joint .flow{ display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:19px; font-weight:700; }
+.joint .flow .s{ background:var(--teal-l); color:#0f6b5e; border:1.5px solid var(--teal-b); padding:6px 14px; border-radius:10px; }
+.joint .flow .c{ background:var(--violet-l); color:var(--violet-d); border:1.5px solid var(--violet-b); padding:6px 14px; border-radius:10px; }
+.joint .flow .ar{ color:#8796a1; font-size:24px; }
+.joint h3{ margin:0 0 10px; font-size:28px; color:var(--navy); }
+.joint p{ font-size:22px; line-height:1.45; color:#40525f; }
+.honest{ margin-top:36px; display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.honest div{ border-radius:22px; padding:28px 34px; font-size:25px; line-height:1.45; }
+.honest .now{ background:var(--navy); color:#d7ebf2; }
+.honest .fut{ background:var(--violet-l); border:1.5px solid var(--violet-b); color:var(--violet-d); }
+.honest h3{ margin:0 0 6px; font-size:32px; }
+.honest .now h3{ color:#fff; } .honest .fut h3{ color:var(--violet); }
+
+/* why */
+.why .card{ padding:34px 38px; }
+.why .card h3{ font-size:34px; }
+.why .card p{ font-size:25px; }
+
+/* closing */
+.close-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:40px; }
+.close-card{ border-radius:28px; padding:50px 54px; min-height:440px; display:flex; flex-direction:column; }
+.close-card .lbl{ font-size:20px; font-weight:800; letter-spacing:3px; text-transform:uppercase; }
+.close-card h3{ font-size:76px; margin:14px 0 6px; letter-spacing:-2px; line-height:1; }
+.close-card .tl2{ font-size:36px; font-weight:600; margin-bottom:26px; }
+.close-card ul{ margin:auto 0 0; padding-left:28px; font-size:25px; line-height:1.55; }
+.close-card.now{ background:rgba(255,255,255,.07); border:2px solid rgba(95,211,193,.45); }
+.close-card.now .lbl{ color:var(--teal-bright); } .close-card.now .tl2{ color:var(--teal-bright); } .close-card.now ul{ color:#d7ebf2; }
+.close-card.fut{ background:rgba(107,79,179,.22); border:2px solid rgba(201,189,234,.5); }
+.close-card.fut .lbl{ color:#cdb9ff; } .close-card.fut .tl2{ color:#cdb9ff; } .close-card.fut ul{ color:#e6defa; }
+
+/* ---------- print ---------- */
+@page{ size:1920px 1080px; margin:0; }
+@media print{
+  html,body{ overflow:visible; height:auto; background:#fff; }
+  #ui,#counter,#hint,#notesPanel{ display:none !important; }
+  #viewport{ position:static; display:block; }
+  #stage{ position:static; transform:none !important; width:1920px; height:auto; }
+  .slide{ position:relative; opacity:1 !important; visibility:visible !important; break-after:page; page-break-after:always; }
+  .slide:last-child{ break-after:auto; page-break-after:auto; }
+  *, *::before, *::after{ animation:none !important; transition:none !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 TITLE -->
+<section class="slide dark" data-title="Title">
+  <svg class="title-art" viewBox="0 0 760 520" aria-hidden="true">
+    <g opacity=".9">
+      <rect class="a-fade" style="--d:.2s" x="40" y="40" width="200" height="64" rx="14" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.2)"/>
+      <rect class="a-fade" style="--d:.35s" x="80" y="140" width="200" height="64" rx="14" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.2)"/>
+      <rect class="a-fade" style="--d:.5s" x="20" y="240" width="200" height="64" rx="14" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.2)"/>
+      <text x="140" y="80" text-anchor="middle" fill="#cfe3ec" font-size="22" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">PR #11</text>
+      <text x="180" y="180" text-anchor="middle" fill="#cfe3ec" font-size="22" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">PR #7</text>
+      <text x="120" y="280" text-anchor="middle" fill="#cfe3ec" font-size="22" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">PR #3</text>
+      <path class="a-draw" style="--d:.6s;--len:600" d="M240,72 C340,72 360,170 450,170" fill="none" stroke="#5fd3c1" stroke-width="3"/>
+      <path class="a-draw" style="--d:.7s;--len:600" d="M280,172 L450,172" fill="none" stroke="#5fd3c1" stroke-width="3"/>
+      <path class="a-draw" style="--d:.8s;--len:600" d="M220,272 C340,272 360,176 450,176" fill="none" stroke="#5fd3c1" stroke-width="3"/>
+      <rect class="a-pop" style="--d:1.2s" x="452" y="120" width="120" height="110" rx="18" fill="#1a9b8a"/>
+      <text x="512" y="168" text-anchor="middle" fill="#fff" font-size="22" font-weight="800" font-family="Inter, sans-serif">GATE</text>
+      <text x="512" y="196" text-anchor="middle" fill="#dff7f2" font-size="15" font-family="Inter, sans-serif">fail-closed</text>
+      <path class="a-draw" style="--d:1.5s;--len:300" d="M572,175 L700,175" fill="none" stroke="#64c789" stroke-width="4"/>
+      <circle class="a-pop" style="--d:1.9s" cx="712" cy="175" r="22" fill="#2f8a4a"/>
+      <text x="712" y="183" text-anchor="middle" fill="#fff" font-size="22" font-weight="800" font-family="Inter, sans-serif">✓</text>
+      <line x1="0" y1="420" x2="760" y2="420" stroke="rgba(255,255,255,.15)" stroke-width="2" stroke-dasharray="8 8"/>
+      <text x="0" y="455" fill="rgba(255,255,255,.4)" font-size="18" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">main</text>
+    </g>
+  </svg>
+  <div class="title-wrap">
+    <div class="kicker a" style="--d:.1s">Stagr 0.7.1 · pre-release</div>
+    <h1 class="a" style="--d:.25s">Stagr</h1>
+    <div class="sub a" style="--d:.45s">Governed AI software delivery</div>
+    <div class="sub2 a" style="--d:.65s">Works today · and the road to <span>CodeGuard AI</span></div>
+    <div class="sub3 a" style="--d:.8s">Product overview, field test and roadmap · October 2026</div>
+  </div>
+  <div class="title-chips">
+    <span class="tchip ok a-pop" style="--d:1.0s">✓ stagr/stage/review</span>
+    <span class="tchip ok a-pop" style="--d:1.15s">✓ stagr/stage/security</span>
+    <span class="tchip ok a-pop" style="--d:1.3s">✓ stagr/governance · Merge is eligible</span>
+  </div>
+  
+  <aside class="notes"><ul>
+    <li>Stagr is the CLI and product of the <code>agentic-foundation</code> repository. Python, BSL 1.1 source-available, pre-release.</li>
+    <li>Structure: the problem, how Stagr works today (0.7.1, 9 Oct 2026), a field test on someone else's repository, how it is built, then the roadmap and the CodeGuard AI vision (clearly marked).</li>
+  </ul></aside>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide" data-title="The problem">
+  <div class="eyebrow"><span class="n">01</span> The problem</div>
+  <h2 class="a">AI agents write more and more code.<br>Who proves a change is safe to merge?</h2>
+  <div class="qgrid">
+    <div class="q a" style="--d:.3s"><div class="mark">?</div><p>Was every reviewer finding fixed?</p></div>
+    <div class="q a" style="--d:.5s"><div class="mark">?</div><p>Did security review run on the exact commit that merged?</p></div>
+    <div class="q a" style="--d:.7s"><div class="mark">?</div><p>Can the AI, or an untrusted contributor, bypass a required check?</p></div>
+    <div class="q a" style="--d:.9s"><div class="mark">?</div><p>If we switch AI vendor, what must be rebuilt?</p></div>
+  </div>
+  <div class="bottomline a" style="--d:1.2s">Today every team wires AI review by hand, differently — and nothing blocks the merge.</div>
+  <aside class="notes"><ul>
+    <li>Teams already have strong agents. What is missing is a safe, repeatable way to run them inside their own pipeline, with clear rules about when a change may merge.</li>
+    <li>Mature tools each own one part: implementers, reviewers, non-AI CI gates. Nobody ships one declared contract that wires them together and proves, per commit, that every required step passed.</li>
+  </ul></aside>
+</section>
+
+<!-- 3 HOW IT WORKS -->
+<section class="slide" data-title="How it works">
+  <div class="eyebrow"><span class="n">02</span> How Stagr works</div>
+  <h2 class="a">Three layers. Stagr lives only in the middle one.</h2>
+  <svg viewBox="0 0 1700 330" width="1700" height="330" style="display:block;margin-top:10px">
+    <defs><marker id="m1" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#0b3d5c"/></marker></defs>
+    <g class="a" style="--d:.3s">
+      <rect x="0" y="20" width="480" height="210" rx="24" fill="#e6f5f2" stroke="#1a9b8a" stroke-width="3"/>
+      <text x="40" y="78" font-size="22" font-weight="800" fill="#1a9b8a" letter-spacing="3">1 · CONTRACT</text>
+      <text x="40" y="126" font-size="34" font-weight="700" fill="#0b3d5c">The team writes</text>
+      <text x="40" y="176" font-size="28" fill="#0b3d5c" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">.agentic/config.yml</text>
+    </g>
+    <path class="a-draw" style="--d:.7s;--len:200" d="M486,125 L600,125" stroke="#0b3d5c" stroke-width="5" marker-end="url(#m1)"/>
+    <g class="a" style="--d:.8s">
+      <rect x="610" y="20" width="480" height="210" rx="24" fill="#0b3d5c"/>
+      <text x="650" y="78" font-size="22" font-weight="800" fill="#5fd3c1" letter-spacing="3">2 · RENDER · ONE TIME</text>
+      <text x="650" y="126" font-size="30" fill="#fff" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr plan / apply</text>
+      <text x="650" y="176" font-size="26" fill="#cfe3ec">validate, then write workflows</text>
+    </g>
+    <path class="a-draw" style="--d:1.2s;--len:200" d="M1096,125 L1210,125" stroke="#0b3d5c" stroke-width="5" marker-end="url(#m1)"/>
+    <g class="a" style="--d:1.3s">
+      <rect x="1220" y="20" width="480" height="210" rx="24" fill="#f3f7fa" stroke="#0b3d5c" stroke-width="3"/>
+      <text x="1260" y="78" font-size="22" font-weight="800" fill="#0b3d5c" letter-spacing="3">3 · EXECUTE</text>
+      <text x="1260" y="126" font-size="34" font-weight="700" fill="#0b3d5c">The team's own CI</text>
+      <text x="1260" y="176" font-size="26" fill="#40525f">GitHub Actions runs the agents</text>
+    </g>
+    <text x="240" y="290" text-anchor="middle" font-size="24" fill="#5b6b78">Owner: the team</text>
+    <text x="850" y="290" text-anchor="middle" font-size="24" fill="#5b6b78">Owner: Stagr CLI</text>
+    <text x="1460" y="290" text-anchor="middle" font-size="24" fill="#5b6b78">Owner: the CI platform</text>
+  </svg>
+  <div class="rule a" style="--d:1.6s">
+    <div class="big">Declare · initialize · govern<br><span>— never execute</span></div>
+    <p>The litmus test: <b>"Does this require Stagr to be running while the pipeline executes?"</b> If yes, it does not belong in Stagr. Generated workflows never call back into Stagr.</p>
+  </div>
+  <div class="nots a" style="--d:1.9s"><span>Not an AI agent</span><span>Not a runtime</span><span>Not a hosted service</span><span>Not a merge bot</span><span>GitHub only today</span></div>
+  <aside class="notes"><ul>
+    <li>Identity: "a platform-neutral contract + renderer". Stagr writes the wiring; the CI platform runs the work.</li>
+    <li>It is not an agent, not a runtime, not a hosted service or dashboard, and not a merge bot: the generated pipeline never merges.</li>
+    <li>Platform today: GitHub only. GitLab, Azure DevOps and Bitbucket renderers are planned.</li>
+  </ul></aside>
+</section>
+
+<!-- 4 CONFIG -> WORKFLOWS -->
+<section class="slide" data-title="One file to a pipeline">
+  <div class="eyebrow"><span class="n">02</span> One file → a governed pipeline</div>
+  <h2 class="a" style="font-size:58px">One short file declares the pipeline.<br><code style="font-size:.8em">stagr apply</code> renders it into the repo's own CI.</h2>
+  <div class="cfgwrap">
+    <div class="a-left" style="--d:.3s">
+      <div class="cfg-title">.agentic/config.yml — the real config from the field test</div>
+<pre class="cfg"><span class="k">version</span>: <span class="v">2</span>
+<span class="k">profile</span>: <span class="v">standard</span>
+<span class="k">platform</span>:
+  <span class="k">type</span>: <span class="v">github</span>
+  <span class="k">publisher</span>: { <span class="k">app_id</span>: <span class="v">5239405</span>, <span class="k">app_slug</span>: <span class="v">stagr-app-bot</span> }
+<span class="k">secrets</span>:                     <span class="c"># names only</span>
+  <span class="k">app_private_key</span>:   <span class="v">STAGR_APP_PRIVATE_KEY</span>
+  <span class="k">platform_token</span>:    <span class="v">REMEDIATION_TOKEN</span>
+  <span class="k">openai_api_key</span>:    <span class="v">OPENAI_API_KEY</span>
+  <span class="k">anthropic_api_key</span>: <span class="v">ANTHROPIC_API_KEY</span>
+<span class="k">stages</span>:
+  - { <span class="k">id</span>: <span class="v">review</span>, <span class="k">type</span>: <span class="v">review</span>,
+      <span class="k">backend</span>: <span class="v">codex-api</span>, <span class="k">gate</span>: <span class="v">blocking</span>, … }
+  - { <span class="k">id</span>: <span class="v">security</span>, <span class="k">type</span>: <span class="v">security</span>,
+      <span class="k">backend</span>: <span class="v">codex-api</span>, <span class="k">gate</span>: <span class="v">blocking</span>,
+      <span class="k">depends_on</span>: [<span class="v">review</span>] }
+<span class="k">remediation</span>: { <span class="k">provider</span>: <span class="v">anthropic</span>, <span class="k">max_rounds</span>: <span class="v">5</span> }</pre>
+    </div>
+    <svg viewBox="0 0 120 300" width="120" height="300" style="margin-top:200px">
+      <path class="a-draw" style="--d:.9s;--len:200" d="M10,150 L100,150" stroke="#1a9b8a" stroke-width="6"/>
+      <path class="a-pop" style="--d:1.1s" d="M92,132 L116,150 L92,168 z" fill="#1a9b8a"/>
+    </svg>
+    <div>
+      <div class="cfg-title" style="color:#5b6b78">.github/workflows/</div>
+      <div class="wfcard a" style="--d:1.1s"><span class="fn">routing.yml</span><span class="what">FAST or NORMAL by file globs. No AI routing.</span></div>
+      <div class="wfcard gr a" style="--d:1.25s"><span class="fn">stage-review.yml</span><span class="what">Codex code review → check run</span></div>
+      <div class="wfcard gr a" style="--d:1.4s"><span class="fn">stage-security.yml</span><span class="what">Codex security review, after review passed</span></div>
+      <div class="wfcard am a" style="--d:1.55s"><span class="fn">remediation.yml</span><span class="what">Claude fixes or declines findings</span></div>
+      <div class="wfcard a" style="--d:1.7s"><span class="fn">resolve-outdated-threads.yml</span><span class="what">Resolves threads a commit made outdated</span></div>
+      <div class="wfcard nv a" style="--d:1.85s"><span class="fn">governance.yml</span><span class="what">The merge gate: <code>stagr/governance</code></span></div>
+    </div>
+  </div>
+  <div class="cmdrow a" style="--d:2.1s">
+    <span style="font-size:22px;color:#5b6b78;font-weight:600;margin-right:6px">CLI today:</span>
+    <span class="cmd">stagr help</span><span class="cmd">stagr init</span><span class="cmd">stagr profile</span><span class="cmd">stagr plan</span><span class="cmd">stagr apply</span>
+    <span class="cmd plan">stagr doctor · planned</span>
+  </div>
+  <aside class="notes"><ul>
+    <li>Getting started: (1) install the CLI with pipx (Python 3.10+, not on PyPI yet, pin a release tag such as v0.7.1); (2) create the team's own Stagr GitHub App and store its private key as a secret; (3) add the backend secrets; (4) <code>stagr init</code> writes a full commented template, <code>stagr plan</code> previews new/changed/unchanged/remove with sha256 and writes nothing, <code>stagr apply</code> writes exactly those files; (5) require <code>stagr/governance</code> in a branch ruleset; (6) open pull requests as usual.</li>
+    <li>The shortest working config is 3 lines: version, profile, platform with app_id. The full example above also sets the provider (<code>openai</code>) per stage; shortened here for the slide.</li>
+    <li>Profiles: <code>minimal</code> = code review; <code>standard</code> (default) = code review + security review, security depends on review; <code>custom</code>.</li>
+    <li>Validation before anything is written: schema, dependency cycles, every stage routed, profile minimum stages (V-S01…V-S17). <code>apply</code> owns only files with the <code># Generated by stagr</code> header and refuses to overwrite files it did not generate.</li>
+  </ul></aside>
+</section>
+
+<!-- 5 LANE -->
+<section class="slide" data-title="The lane">
+  <div class="eyebrow"><span class="n">03</span> A pull request's journey</div>
+  <h2 class="a">Codex reviews. Claude fixes. The gate decides.<br>A human merges.</h2>
+  <svg viewBox="0 0 1700 620" width="1700" height="620" style="display:block;margin-top:-6px">
+    <defs>
+      <marker id="m2" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#9fb1bd"/></marker>
+      <marker id="m3" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#d9821c"/></marker>
+    </defs>
+    <!-- connectors -->
+    <g stroke="#9fb1bd" stroke-width="4" fill="none">
+      <path d="M238,250 L318,250" marker-end="url(#m2)"/>
+      <path d="M522,250 L620,250" marker-end="url(#m2)"/>
+      <path d="M870,250 L960,250" marker-end="url(#m2)"/>
+      <path d="M1210,250 L1290,250" marker-end="url(#m2)"/>
+      <path d="M1552,250 L1610,250" marker-end="url(#m2)"/>
+    </g>
+    <text x="915" y="288" text-anchor="middle" font-size="15" fill="#5b6b78">only after</text>
+    <text x="915" y="306" text-anchor="middle" font-size="15" fill="#5b6b78">review ✓</text>
+    <!-- loop -->
+    <path d="M705,315 L705,410" stroke="#d9821c" stroke-width="4" fill="none" marker-end="url(#m3)"/>
+    <path d="M785,410 L785,315" stroke="#d9821c" stroke-width="4" fill="none" marker-end="url(#m3)"/>
+    <text x="692" y="368" text-anchor="end" font-size="18" fill="#8a5300" font-weight="600">finding</text>
+    <text x="798" y="368" font-size="18" fill="#8a5300" font-weight="600">push → re-review</text>
+
+    <!-- PR -->
+    <g class="a" style="--d:.2s">
+      <rect x="50" y="190" width="188" height="120" rx="60" fill="#fff" stroke="#0b3d5c" stroke-width="3"/>
+      <text x="144" y="245" text-anchor="middle" font-size="26" font-weight="800" fill="#0b3d5c">Pull</text>
+      <text x="144" y="276" text-anchor="middle" font-size="26" font-weight="800" fill="#0b3d5c">request</text>
+    </g>
+    <!-- route -->
+    <g class="a" style="--d:.35s">
+      <rect x="322" y="185" width="200" height="130" rx="20" fill="#e6f5f2" stroke="#1a9b8a" stroke-width="3"/>
+      <text x="422" y="240" text-anchor="middle" font-size="28" font-weight="800" fill="#0b3d5c">Route</text>
+      <text x="422" y="276" text-anchor="middle" font-size="20" fill="#0f6b5e">FAST | NORMAL</text>
+      <text x="422" y="142" text-anchor="middle" font-size="16" fill="#5b6b78" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr/route-classification</text>
+    </g>
+    <!-- review -->
+    <g class="a" style="--d:.5s">
+      <rect x="625" y="185" width="245" height="130" rx="20" fill="#0b3d5c"/>
+      <text x="747" y="236" text-anchor="middle" font-size="28" font-weight="800" fill="#fff">Code review</text>
+      <text x="747" y="272" text-anchor="middle" font-size="21" fill="#9fe0b4">Codex</text>
+      <text x="747" y="142" text-anchor="middle" font-size="16" fill="#5b6b78" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr/stage/review</text>
+    </g>
+    <!-- review chip -->
+    <g class="flip-from" style="--d:4.2s"><rect x="660" y="80" width="175" height="40" rx="20" fill="#fdecea" stroke="#c0392b" stroke-width="2"/><text x="747" y="107" text-anchor="middle" font-size="19" font-weight="700" fill="#8f2d2d">P1 finding</text></g>
+    <g class="flip-to" style="--d:4.2s"><rect x="660" y="80" width="175" height="40" rx="20" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2"/><text x="747" y="107" text-anchor="middle" font-size="19" font-weight="700" fill="#1f5f33">✓ pass</text></g>
+    <!-- claude -->
+    <g class="a" style="--d:.7s">
+      <rect x="590" y="415" width="315" height="120" rx="20" fill="#fff3e0" stroke="#d9821c" stroke-width="3"/>
+      <text x="747" y="460" text-anchor="middle" font-size="27" font-weight="800" fill="#8a5300">Claude remediation</text>
+      <text x="747" y="494" text-anchor="middle" font-size="19" fill="#6b4a14">judge → fix or decline</text>
+      <text x="747" y="522" text-anchor="middle" font-size="17" fill="#6b4a14" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">fix(review): … commit</text>
+    </g>
+    <g class="a" style="--d:.9s">
+      <rect x="935" y="430" width="300" height="92" rx="16" fill="#fdecea" stroke="#c0392b" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="1085" y="466" text-anchor="middle" font-size="20" font-weight="700" fill="#8f2d2d">after max_rounds (default 5)</text>
+      <text x="1085" y="496" text-anchor="middle" font-size="18" fill="#8f2d2d">label human-merge, AI stops</text>
+      <path d="M905,476 L933,476" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+    </g>
+    <!-- security -->
+    <g class="a" style="--d:.65s">
+      <rect x="965" y="185" width="245" height="130" rx="20" fill="#12506f"/>
+      <text x="1087" y="236" text-anchor="middle" font-size="28" font-weight="800" fill="#fff">Security</text>
+      <text x="1087" y="272" text-anchor="middle" font-size="21" fill="#9fe0b4">Codex</text>
+      <text x="1087" y="142" text-anchor="middle" font-size="16" fill="#5b6b78" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr/stage/security</text>
+    </g>
+    <g class="flip-from" style="--d:5.6s"><rect x="1000" y="80" width="175" height="40" rx="20" fill="#f3f7fa" stroke="#9fb1bd" stroke-width="2"/><text x="1087" y="107" text-anchor="middle" font-size="19" font-weight="700" fill="#5b6b78">waiting</text></g>
+    <g class="flip-to" style="--d:5.6s"><rect x="1000" y="80" width="175" height="40" rx="20" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2"/><text x="1087" y="107" text-anchor="middle" font-size="19" font-weight="700" fill="#1f5f33">✓ pass</text></g>
+    <!-- gate -->
+    <g class="a" style="--d:.8s">
+      <rect x="1295" y="175" width="257" height="150" rx="22" fill="#fff" stroke="#0b3d5c" stroke-width="4"/>
+      <text x="1423" y="232" text-anchor="middle" font-size="28" font-weight="800" fill="#0b3d5c">Governance</text>
+      <text x="1423" y="264" text-anchor="middle" font-size="28" font-weight="800" fill="#0b3d5c">gate</text>
+      <text x="1423" y="298" text-anchor="middle" font-size="16" fill="#5b6b78">fail-closed · head SHA</text>
+      <text x="1423" y="142" text-anchor="middle" font-size="16" fill="#5b6b78" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr/governance</text>
+    </g>
+    <g class="flip-from" style="--d:6.6s"><rect x="1295" y="345" width="257" height="54" rx="27" fill="#c0392b"/><text x="1423" y="380" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">✕ Merge is blocked</text></g>
+    <g class="flip-to" style="--d:6.6s"><rect x="1295" y="345" width="257" height="54" rx="27" fill="#2f8a4a"/><text x="1423" y="380" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">✓ Merge is eligible</text></g>
+    <!-- human -->
+    <g class="a" style="--d:.95s">
+      <circle cx="1650" cy="222" r="26" fill="#2f8a4a"/>
+      <path d="M1606,300 C1606,262 1694,262 1694,300 Z" fill="#2f8a4a"/>
+      <text x="1650" y="345" text-anchor="middle" font-size="22" font-weight="800" fill="#1f5f33">Human</text>
+      <text x="1650" y="372" text-anchor="middle" font-size="22" font-weight="800" fill="#1f5f33">merges</text>
+    </g>
+    <!-- token -->
+    <g id="token"><circle r="22" fill="#d9821c" stroke="#fff" stroke-width="4"/><text y="7" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">PR</text></g>
+  </svg>
+  <div class="lane-legend a-fade" style="--d:1.2s">
+    <span><i style="background:#1a9b8a"></i>Stagr wiring</span>
+    <span><i style="background:#0b3d5c"></i>Codex stages</span>
+    <span><i style="background:#d9821c"></i>Claude fixes</span>
+    <span><i style="background:#2f8a4a"></i>Pass / human</span>
+    <span><i style="background:#c0392b"></i>Blocked</span>
+  </div>
+  <aside class="notes"><ul>
+    <li>Route: deterministic, by file globs. FAST runs the lighter set of stages the team lists; NORMAL runs all. No AI routing.</li>
+    <li>Review and security are blocking stages run by Codex. Backend <code>codex</code> = Codex GitHub App via <code>@codex review</code>; backend <code>codex-api</code> (new in 0.6.0) = Codex on the team's own OpenAI API key, findings posted as one review by the team's Stagr App.</li>
+    <li>Remediation (0.5.0+): Claude Code Action judges each finding, fixes it (one <code>fix(review):</code> commit) or declines with a reply. Bounded by <code>remediation.max_rounds</code> (default 5, range 1–10); then <code>human-merge</code> label and hand-off. Cannot edit <code>.github/**</code> or <code>.agentic/**</code>; never resolves threads.</li>
+    <li>Claude does not implement features from scratch today; an <code>implement</code> stage is roadmap.</li>
+    <li>The generated pipeline never merges. The team makes <code>stagr/governance</code> a required check; a human merges.</li>
+  </ul></aside>
+</section>
+
+<!-- 6 TRUST -->
+<section class="slide" data-title="Trust and the gate">
+  <div class="eyebrow"><span class="n">04</span> Why you can trust the gate</div>
+  <h2 class="a">"Merge is eligible" only when every<br>condition holds on this exact commit.</h2>
+  <div class="gatecol">
+    <div>
+      <div class="cond a-left" style="--d:.3s"><div class="ck">✓</div><div><h4>Signed by the team's own App</h4><p>Each stage publishes a Check Run <code>stagr/stage/&lt;id&gt;</code> authored by the team's Stagr GitHub App. Any other author is rejected.</p></div></div>
+      <div class="cond a-left" style="--d:.5s"><div class="ck">✓</div><div><h4>Bound to the head commit</h4><p>The payload names <code>headSha</code>. A result for an older commit is ignored.</p></div></div>
+      <div class="cond a-left" style="--d:.7s"><div class="ck">✓</div><div><h4>Every blocking stage passed</h4><p>Exactly one result per stage, completed, conclusion pass.</p></div></div>
+      <div class="cond a-left" style="--d:.9s"><div class="ck">✓</div><div><h4>Fail-closed</h4><p>Missing, pending, duplicate or unknown = "Merge is blocked".</p></div></div>
+      <div class="forge a" style="--d:1.1s"><b style="color:var(--red-d)">Commit statuses are not trusted.</b> Anyone with <code>statuses: write</code> could forge one. A forged status counts for nothing.</div>
+    </div>
+    <div class="tiles">
+      <div class="tile a" style="--d:.6s"><h4><i class="ic"></i>Secrets by name</h4><p>One <code>secrets</code> block (0.7.0). A pasted value is rejected and never printed.</p></div>
+      <div class="tile a" style="--d:.75s"><h4><i class="ic"></i>Pinned actions</h4><p>Every third-party action pinned to a full commit SHA.</p></div>
+      <div class="tile a" style="--d:.9s"><h4><i class="ic"></i>No fork automation</h4><p>Fork PRs never drive automation. Privileged jobs never check out PR code.</p></div>
+      <div class="tile a" style="--d:1.05s"><h4><i class="ic"></i>Text is data</h4><p>PR and comment text is untrusted data, never instructions.</p></div>
+      <div class="tile a" style="--d:1.2s"><h4><i class="ic" style="background:var(--amber)"></i>Bounded AI</h4><p>After <code>max_rounds</code> fix rounds: <code>human-merge</code> label, automation pauses.</p></div>
+      <div class="tile a" style="--d:1.35s"><h4><i class="ic" style="background:var(--green)"></i>A human merges</h4><p><code>stagr/governance</code> is a required check in a branch ruleset.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul>
+    <li>The JSON payload in each Check Run carries stageId, headSha, state, conclusion. The gate checks the publishing App id, the schema version and the head SHA.</li>
+    <li>Claude's remediation cannot edit <code>.github/**</code> or <code>.agentic/**</code> and never resolves a review thread.</li>
+    <li>Each key reaches only the job that needs it; each workflow has least-privilege permissions.</li>
+  </ul></aside>
+</section>
+
+<!-- 7 FIELD TEST -->
+<section class="slide" data-title="Field test">
+  <div class="eyebrow"><span class="n">05</span> Field test · 8–9 October 2026</div>
+  <h2 class="a">Tested on someone else's app.<br>No Stagr code before onboarding.</h2>
+  <div class="grid" style="grid-template-columns:1.1fr 1fr;gap:36px">
+    <div class="repo a-left" style="--d:.3s">
+      <div class="nm">aashish-kumar-intelera/<br>spring-angular-book-management</div>
+      <div class="tag">Spring Boot + Angular book-management app · owned by another developer (Aashish Kumar)</div>
+      <div class="bignum">
+        <div><b data-count="11">11</b><span>pull requests, all through Stagr</span></div>
+        <div><b data-count="2">2</b><span>days</span></div>
+      </div>
+      <div class="path">
+        <span class="st">PR #2 onboard · 0.3.2</span><span class="ar">→</span>
+        <span class="st">0.5.0 remediation</span><span class="ar">→</span>
+        <span class="st">codex-api + standard</span>
+      </div>
+    </div>
+    <div class="sqlcard a" style="--d:.7s">
+      <div class="lbl" style="color:var(--red)">Planted SQL injection · PRs #3, #5, #7</div>
+      <div class="inj">' OR 1=1 --</div>
+      <p style="font-size:22px;line-height:1.45;color:#33434f"><b style="color:var(--green)">Codex P1:</b> "Parameterize the search predicate: a <code>search</code> value such as <code>' OR 1=1 --</code> is concatenated into both SQL statements."</p>
+      <div class="commit" style="margin-top:16px"><b style="color:var(--amber-d)">Claude:</b> fix(review): parameterize book search predicate to prevent SQL injection</div>
+      <p style="font-size:22px;margin-top:16px;color:var(--green-d)"><b style="color:var(--green-d)">Re-review:</b> "Didn't find any major issues."</p>
+    </div>
+  </div>
+  <aside class="notes"><ul>
+    <li>Onboarded in PR #2 "Onboard Stagr review pipeline" on 8 Oct. Upgraded live from Stagr 0.3.2 → 0.5.0 (remediation) → <code>codex-api</code> backend + standard profile.</li>
+    <li>The SQL injection was planted on purpose to test the lane end to end.</li>
+  </ul></aside>
+</section>
+
+<!-- 8 PR #11 -->
+<section class="slide" data-title="PR #11 story">
+  <div class="eyebrow"><span class="n">05</span> Field test · PR #11 "Add edit and delete for comments"</div>
+  <h2 class="a" style="font-size:54px;margin-bottom:24px">Any user could edit others' comments. Codex caught it.</h2>
+  <div class="tlwrap">
+    <div class="tl">
+      <div class="ev a" style="--d:.3s"><div class="dot">1</div><span class="who dv">Developer</span><p>Pushes the feature · commit <code>9eb33a9</code></p></div>
+      <div class="ev cx a" style="--d:.8s"><div class="dot">2</div><span class="who cx">Codex review · via the team's Stagr App</span><p>1 finding on <code>CommentServiceImpl.java</code>: no ownership check on edit and delete.</p></div>
+      <div class="ev cl a" style="--d:1.3s"><div class="dot">3</div><span class="who cl">Claude fix · bce7758</span><br><span class="cm">fix(review): enforce ownership check on comment edit/delete</span><p style="font-size:20px">Non-authors now get 403 Forbidden.</p></div>
+      <div class="ev cx a" style="--d:1.8s"><div class="dot">4</div><span class="who cx">Codex re-review</span><p>1 finding on <code>CommentController.java</code>: clients never receive the comment id the new endpoints need.</p></div>
+      <div class="ev cl a" style="--d:2.3s"><div class="dot">5</div><span class="who cl">Claude fix · 59ee0f0</span><br><span class="cm">fix(review): expose comment ids before requiring them for edits</span></div>
+      <div class="ev ok a" style="--d:2.8s"><div class="dot">✓</div><span class="who ok">Re-review and security</span><p>0 findings. Security review (runs only after review passed): 0 findings.</p></div>
+    </div>
+    <div>
+      <div class="finalcard a" style="--d:3.2s">
+        <h3>Check runs on the final head</h3>
+        <div class="crun a-pop" style="--d:3.4s"><span class="c">✓</span>stagr/route-classification · NORMAL</div>
+        <div class="crun a-pop" style="--d:3.6s"><span class="c">✓</span>stagr/stage/review · pass</div>
+        <div class="crun a-pop" style="--d:3.8s"><span class="c">✓</span>stagr/stage/security · pass</div>
+        <div class="crun big a-pop" style="--d:4.1s"><span class="c">✓</span>stagr/governance · Merge is eligible</div>
+        <div class="human a-fade" style="--d:4.4s">→ A human decides the merge.</div>
+      </div>
+      <div class="snippet a" style="--d:4.6s"><span class="k">checkOwnership</span>(...)<br>→ <span class="k">ResponseStatusException</span>(<br>&nbsp;&nbsp;HttpStatus.FORBIDDEN,<br>&nbsp;&nbsp;<span class="s">"You can only modify your own comments"</span>)</div>
+    </div>
+  </div>
+  <aside class="notes"><ul>
+    <li>The full governed loop, 9 Oct. An earlier PR #8 phrased the same class of bug: "This lets any authenticated user overwrite other users' comments."</li>
+    <li>Claude's first fix message in full: "fix(review): enforce ownership check on comment edit/delete — updateComment and deleteComment now reject callers who are not the comment's author with 403 Forbidden."</li>
+    <li>The second finding came from the re-review of bce7758: the fix made the endpoints need an id that clients never received.</li>
+  </ul></aside>
+</section>
+
+<!-- 9 GLITCHES -->
+<section class="slide" data-title="Glitches fixed">
+  <div class="eyebrow"><span class="n">06</span> Glitches found in the field</div>
+  <h2 class="a">A real repository finds real glitches.<br>Each one was fixed the same day.</h2>
+  <div class="gl">
+    <div class="gcard a-flip" style="--d:.3s"><div class="bug"><div class="lbl">Found</div><p>The Codex GitHub App hit "You have reached your Codex usage limits for code reviews" (PR #10).</p></div><div class="fix"><div class="lbl">Fixed</div><p>New <code>codex-api</code> backend: Codex on the team's own OpenAI API key.</p><span class="ver">0.6.0</span></div></div>
+    <div class="gcard a-flip" style="--d:.55s"><div class="bug"><div class="lbl">Found</div><p>The fix-round counter counted message lines, not commits. PR #9 ran 8 rounds against a limit of 5.</p></div><div class="fix"><div class="lbl">Fixed</div><p>Rounds counted correctly. The safety net still worked: <code>human-merge</code> added, automation paused.</p><span class="ver">0.5.4</span></div></div>
+    <div class="gcard a-flip" style="--d:.8s"><div class="bug"><div class="lbl">Found</div><p>With no other checks on the repo, the gate kept its first "Merge is blocked" after all stages passed.</p></div><div class="fix"><div class="lbl">Fixed</div><p>The gate now wakes on every stage signal. It stayed closed, never open.</p><span class="ver">0.7.1</span></div></div>
+    <div class="gcard a-flip" style="--d:1.05s"><div class="bug"><div class="lbl">Found</div><p>At low reasoning effort Codex reported only one finding per round.</p></div><div class="fix"><div class="lbl">Fixed</div><p>Reviews run at high reasoning effort and report every finding at once.</p><span class="ver">0.7.1</span></div></div>
+  </div>
+  <div class="selfbug a" style="--d:1.4s"><span style="font-size:34px">↺</span><span><b>The reviewer reviews the tool too.</b> During the test (PR #6) Codex found a bug in Stagr's own governance workflow: two PRs sharing one head SHA.</span></div>
+  <aside class="notes"><ul>
+    <li>On PR #9, Stagr posted "Human review needed … Automated reviews and fixes are paused".</li>
+    <li>Every glitch failed safe: a stale gate stayed blocked, a wrong counter still handed over to a human.</li>
+  </ul></aside>
+</section>
+
+<!-- 10 BUILT WITH OWN PROCESS -->
+<section class="slide dark" data-title="Built with its own process">
+  <div class="eyebrow" style="color:var(--teal-bright)"><span class="n" style="color:#fff">07</span> Built with its own process</div>
+  <h2 class="a">Stagr is built the way it ships.</h2>
+  <div class="stats">
+    <div class="stat a" style="--d:.2s"><b data-count="104">104</b><span>pull requests merged</span></div>
+    <div class="stat a" style="--d:.35s"><b data-count="754">754</b><span>automated tests</span></div>
+    <div class="stat a" style="--d:.5s"><b data-count="13">13</b><span>releases in 2 days</span></div>
+    <div class="stat a" style="--d:.65s"><b style="white-space:nowrap">28 Sep</b><span>first commit, 2026</span></div>
+  </div>
+  <div class="rel a-fade" style="--d:.9s">
+    <div class="lbl">Releases · 8–9 October 2026</div>
+    <div class="relrow">
+      <div class="rv"><i></i><span>0.2.0</span></div><div class="rv"><i></i><span>0.3.0</span></div><div class="rv"><i></i><span>0.3.1</span></div>
+      <div class="rv"><i></i><span>0.3.2</span></div><div class="rv"><i></i><span>0.5.0</span></div><div class="rv"><i></i><span>0.5.1</span></div>
+      <div class="rv"><i></i><span>0.5.2</span></div><div class="rv"><i></i><span>0.5.3</span></div><div class="rv"><i></i><span>0.5.4</span></div>
+      <div class="rv"><i></i><span>0.6.0</span></div><div class="rv"><i></i><span>0.6.1</span></div><div class="rv"><i></i><span>0.7.0</span></div>
+      <div class="rv"><i></i><span>0.7.1</span></div>
+    </div>
+  </div>
+  <div class="loop3 a" style="--d:1.2s">
+    <span class="r" style="background:rgba(217,130,28,.22);color:#ffd59a">Claude implements</span><span style="color:#5fd3c1">→</span>
+    <span class="r" style="background:rgba(47,138,74,.25);color:#b5f0c7">Codex reviews</span><span style="color:#5fd3c1">→</span>
+    <span class="r" style="background:rgba(95,211,193,.18);color:#bfeee6">a fail-closed gate merges</span>
+  </div>
+  <aside class="notes"><ul>
+    <li>Repository: <code>exepex/agentic-foundation</code>. First commit 28 Sep 2026.</li>
+    <li>Note: Stagr's own repository uses a hand-written auto-merge gate for its own foundation work. The pipeline Stagr generates for other teams does not merge; a human does. Auto-merge lanes in generated pipelines are roadmap.</li>
+  </ul></aside>
+</section>
+
+<!-- 11 SHIPPED VS ROADMAP -->
+<section class="slide" data-title="Shipped vs roadmap">
+  <div class="eyebrow"><span class="n">08</span> Current state · Stagr 0.7.1</div>
+  <h2 class="a" style="margin-bottom:22px">What works today, and what comes next.</h2>
+  <table class="st a" style="--d:.3s">
+    <thead><tr><th style="width:15%">Area</th><th style="width:46%"><span class="pill p-ship">Shipped</span></th><th><span class="pill p-road">Roadmap</span></th></tr></thead>
+    <tbody>
+      <tr><td>CLI</td><td class="sh"><code>help</code> <code>init</code> <code>profile</code> <code>plan</code> <code>apply</code></td><td class="rd"><code>stagr doctor</code></td></tr>
+      <tr><td>Profiles</td><td class="sh"><code>minimal</code> (review) · <code>standard</code> (review + security) · <code>custom</code></td><td class="rd">Config inheritance (org / team base)</td></tr>
+      <tr><td>Stages</td><td class="sh"><code>review</code>, <code>security</code> — both blocking</td><td class="rd">Build / test, observed stages (designed); <code>implement</code></td></tr>
+      <tr><td>Backends</td><td class="sh"><code>codex</code> (GitHub App) · <code>codex-api</code> (API key, 0.6.0)</td><td class="rd">More agent backends</td></tr>
+      <tr><td>Claude</td><td class="sh">Remediation: fixes findings, bounded rounds, <code>human-merge</code></td><td class="rd">Implement from an approved story</td></tr>
+      <tr><td>Merge</td><td class="sh"><code>stagr/governance</code> fail-closed verdict · a human merges</td><td class="rd">Auto-merge lanes in generated pipelines</td></tr>
+      <tr><td>Cost, loops</td><td class="sh">Remediation round limit</td><td class="rd">Budgets, cost caps, loop limits</td></tr>
+      <tr><td>Audit</td><td class="sh">Check runs and review threads on each PR</td><td class="rd">Emit adapter: run / cost / decision events</td></tr>
+      <tr><td>Runners</td><td class="sh">GitHub-hosted</td><td class="rd">Self-hosted ephemeral runners · MCP context servers</td></tr>
+      <tr><td>Platforms</td><td class="sh">GitHub</td><td class="rd">GitLab · Azure DevOps · Bitbucket</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes"><ul>
+    <li>Validation V-S01…V-S17 and the <code>secrets</code> block (0.7.0) are shipped.</li>
+    <li>Claude Code Action ships for remediation only. Guardrail for every roadmap item: if it cannot be reduced to declare, initialize, govern, render or emit, it belongs in a backend or the team's CI, not in Stagr.</li>
+  </ul></aside>
+</section>
+
+<!-- 12 STAGR NEXT -->
+<section class="slide" data-title="Stagr next">
+  <div class="vision-corner"><span class="badge road">ROADMAP</span></div>
+  <div class="eyebrow"><span class="n">09</span> Stagr next</div>
+  <h2 class="a">Widen the lane. Stay wiring only.</h2>
+  <div class="rm">
+    <div class="card t a" style="--d:.2s"><h3>More stages <span class="pill p-des">designed</span></h3><ul><li>Build and test stages as <code>commands</code></li><li><b>Observed stages</b>: read a named check from SonarCloud or CodeGuard</li></ul></div>
+    <div class="card am a" style="--d:.35s"><h3>Start from a story</h3><ul><li>An <code>implement</code> stage: an approved story (issue label) starts Claude</li><li>Today Claude only fixes review findings</li></ul></div>
+    <div class="card n a" style="--d:.5s"><h3>Run where the team wants</h3><ul><li>Self-hosted ephemeral runners</li><li>MCP context servers by name</li></ul></div>
+    <div class="card n a" style="--d:.65s"><h3>Govern cost and loops</h3><ul><li>Budgets and loop limits</li><li>Emit adapter: run, cost and decision events to the org's stack</li></ul></div>
+    <div class="card n a" style="--d:.8s"><h3>Setup checks</h3><ul><li><code>stagr doctor</code>: check a repository's setup before the first pull request</li></ul></div>
+    <div class="card n a" style="--d:.95s"><h3>More platforms</h3><ul><li>GitLab and Azure DevOps renderers</li><li>Same contract</li></ul></div>
+  </div>
+  <div class="rule a" style="--d:1.2s;margin-top:34px;background:var(--amber-l);color:var(--amber-d);border:1.5px solid var(--amber-b)"><div class="big" style="color:var(--amber-d);font-size:34px">Guardrail</div><p style="color:#6b4a14">Every item must reduce to <b style="color:var(--amber-d)">declare, initialize, govern, render or emit</b>. If it does the work itself, it belongs in a backend or the team's CI — not in Stagr.</p></div>
+  <aside class="notes"><ul>
+    <li>Nothing on this slide ships in 0.7.1. Every item is charter-compatible: declare, initialize, govern, render or emit — never execute.</li>
+    <li>Observed stages are the joint for CodeGuard (next slides): Stagr reads another tool's check as a blocking stage, never running the tool.</li>
+  </ul></aside>
+</section>
+
+<!-- 13 CODEGUARD PLANES -->
+<section class="slide" data-title="CodeGuard: four planes">
+  <div class="vision-corner"><span class="badge vision">VISION · ROADMAP</span></div>
+  <div class="eyebrow" style="color:var(--violet)"><span class="n">10</span> CodeGuard AI</div>
+  <h2 class="a">Next: Stagr becomes the CI backbone<br>of CodeGuard AI.</h2>
+  <div class="planes">
+    <svg viewBox="0 0 1080 640" width="1080" height="640">
+      <g class="a-fade" style="--d:1.6s">
+        <rect x="6" y="6" width="1068" height="330" rx="22" fill="none" stroke="#6b4fb3" stroke-width="3" stroke-dasharray="12 9"/>
+        <text x="34" y="44" font-size="20" font-weight="800" fill="#6b4fb3" letter-spacing="3">COMPANY NETWORK</text>
+      </g>
+      <g class="a" style="--d:1.3s">
+        <rect x="30" y="62" width="1020" height="146" rx="18" fill="#f1edfa" stroke="#6b4fb3" stroke-width="3"/>
+        <text x="60" y="104" font-size="30" font-weight="800" fill="#45317f">CodeGuard Brain · knowledge</text>
+        <text x="60" y="142" font-size="21" fill="#45317f">Neo4j code graph + Postgres catalog · code reverse-engineered</text>
+        <text x="60" y="170" font-size="21" fill="#45317f">into business language, with evidence · team documents</text>
+        <text x="60" y="196" font-size="19" fill="#6b4fb3" font-style="italic">Conventions ratified by humans · law &gt; convention &gt; precedent</text>
+      </g>
+      <g class="a-pop" style="--d:1.8s">
+        <rect x="310" y="218" width="460" height="44" rx="22" fill="#6b4fb3"/>
+        <text x="540" y="247" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">Brain Gateway (MCP) · one guarded door</text>
+      </g>
+      <g class="a" style="--d:.9s">
+        <rect x="30" y="272" width="1020" height="52" rx="14" fill="#fff" stroke="#6b4fb3" stroke-width="2.5"/>
+        <text x="60" y="306" font-size="24" font-weight="800" fill="#45317f">CodeGuard console · control plane</text>
+        <text x="1020" y="306" text-anchor="end" font-size="19" fill="#45317f">intent · stories · asks inbox · verdicts · audit</text>
+      </g>
+      <g class="a" style="--d:.5s">
+        <rect x="30" y="364" width="1020" height="110" rx="18" fill="#f3f7fa" stroke="#0b3d5c" stroke-width="2.5"/>
+        <text x="60" y="408" font-size="28" font-weight="800" fill="#0b3d5c">CI runners · execution</text>
+        <text x="60" y="446" font-size="21" fill="#40525f">The team's own CI runs the agents. They get a short, cited, task-scoped brief.</text>
+      </g>
+      <g class="a" style="--d:.15s">
+        <rect x="30" y="494" width="1020" height="120" rx="18" fill="#0b3d5c"/>
+        <text x="60" y="540" font-size="28" font-weight="800" fill="#fff">Stagr · contract</text>
+        <text x="60" y="580" font-size="21" fill="#cfe3ec">Stages, gates and check runs, rendered into the CI.</text>
+        <rect x="860" y="520" width="160" height="40" rx="20" fill="#5fd3c1"/>
+        <text x="940" y="547" text-anchor="middle" font-size="18" font-weight="800" fill="#072a40">WORKS TODAY</text>
+      </g>
+    </svg>
+    <div class="side">
+      <div class="card v a" style="--d:2.0s"><h3 style="color:var(--violet-d)">Answers, never the brain</h3><p>The brain stays inside the company network. Agents reach it through one guarded door and get a short, task-scoped, cited brief — never the whole graph.</p></div>
+      <div class="card v a" style="--d:2.2s"><h3 style="color:var(--violet-d)">Residency per application</h3><p>Each application picks its mode.</p><div class="res"><span>cloud</span><span>hybrid</span><span>sovereign</span></div></div>
+    </div>
+  </div>
+  <aside class="notes"><ul>
+    <li>CodeGuard AI is a product vision, based on the earlier "corporate governance" platform: Java/Spring, an Angular console, Neo4j + Postgres. It is a prototype, not a product.</li>
+    <li>Four planes: Stagr = contract (wiring); CI runners = execution; CodeGuard console = control plane (intent, stories, asks inbox, human verdicts, audit); CodeGuard Brain = knowledge.</li>
+    <li>"Ship answers, never the brain": the Brain Gateway (MCP) is the only door.</li>
+  </ul></aside>
+</section>
+
+<!-- 14 NANOBOTS FLOW -->
+<section class="slide" data-title="CodeGuard: nanobots and judge">
+  <div class="vision-corner"><span class="badge vision">VISION · ROADMAP</span></div>
+  <div class="eyebrow" style="color:var(--violet)"><span class="n">10</span> CodeGuard AI · the target flow</div>
+  <h2 class="a">Small agents do the work. An independent judge checks it. Humans decide.</h2>
+  <svg viewBox="0 0 1700 640" width="1700" height="640" style="display:block">
+    <defs>
+      <marker id="mv" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#6b4fb3"/></marker>
+      <marker id="ma" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#d9821c"/></marker>
+      <marker id="mn" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#0b3d5c"/></marker>
+    </defs>
+    <!-- row 1 -->
+    <g class="a" style="--d:.2s"><rect x="0" y="20" width="250" height="120" rx="20" fill="#f1edfa" stroke="#6b4fb3" stroke-width="2.5"/>
+      <text x="125" y="72" text-anchor="middle" font-size="30" font-weight="800" fill="#45317f">Intent</text>
+      <text x="125" y="106" text-anchor="middle" font-size="19" fill="#45317f">what the business wants</text></g>
+    <path class="a-fade" style="--d:.35s" d="M255,80 L310,80" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <g class="a" style="--d:.45s"><rect x="320" y="20" width="270" height="120" rx="20" fill="#f1edfa" stroke="#6b4fb3" stroke-width="2.5"/>
+      <text x="455" y="72" text-anchor="middle" font-size="30" font-weight="800" fill="#45317f">Stories</text>
+      <text x="455" y="106" text-anchor="middle" font-size="19" fill="#45317f">grounded in the brain</text></g>
+    <path class="a-fade" style="--d:.6s" d="M595,80 L650,80" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <g class="a" style="--d:.7s"><rect x="660" y="20" width="270" height="120" rx="20" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2.5"/>
+      <text x="795" y="72" text-anchor="middle" font-size="30" font-weight="800" fill="#1f5f33">Human approves</text>
+      <text x="795" y="106" text-anchor="middle" font-size="19" fill="#1f5f33">the story</text></g>
+    <path class="a-fade" style="--d:.85s" d="M935,80 L990,80" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <g class="a" style="--d:.95s"><rect x="1000" y="0" width="700" height="190" rx="24" fill="#fff" stroke="#6b4fb3" stroke-width="3"/>
+      <text x="1350" y="46" text-anchor="middle" font-size="30" font-weight="800" fill="#45317f">Nanobots</text>
+      <text x="1350" y="80" text-anchor="middle" font-size="19" fill="#45317f">small agents · one task each · a frozen contract · coordinate via CodeGuard</text></g>
+    <g>
+      <line x1="1120" y1="135" x2="1580" y2="135" stroke="#c9bdea" stroke-width="4"/>
+      <circle class="msg" style="--d:1.6s" cx="1140" cy="135" r="7" fill="#6b4fb3"/>
+      <circle class="msg" style="--d:2.2s" cx="1290" cy="135" r="7" fill="#6b4fb3"/>
+      <circle class="msg" style="--d:2.8s" cx="1440" cy="135" r="7" fill="#6b4fb3"/>
+      <g class="a-pop" style="--d:1.1s"><circle class="nb" style="--d:1.6s" cx="1120" cy="135" r="28" fill="#6b4fb3"/></g>
+      <g class="a-pop" style="--d:1.2s"><circle class="nb" style="--d:1.9s" cx="1270" cy="135" r="28" fill="#6b4fb3"/></g>
+      <g class="a-pop" style="--d:1.3s"><circle class="nb" style="--d:2.2s" cx="1420" cy="135" r="28" fill="#6b4fb3"/></g>
+      <g class="a-pop" style="--d:1.4s"><circle class="nb" style="--d:2.5s" cx="1570" cy="135" r="28" fill="#6b4fb3"/></g>
+      <text x="1120" y="142" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">T1</text>
+      <text x="1270" y="142" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">T2</text>
+      <text x="1420" y="142" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">T3</text>
+      <text x="1570" y="142" text-anchor="middle" font-size="18" font-weight="800" fill="#fff">T4</text>
+    </g>
+    <path class="a-fade" style="--d:1.6s" d="M1350,192 L1350,240" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <!-- row 2 -->
+    <g class="a" style="--d:1.8s"><rect x="1000" y="250" width="700" height="170" rx="24" fill="#fff" stroke="#6b4fb3" stroke-width="3"/>
+      <text x="1350" y="294" text-anchor="middle" font-size="30" font-weight="800" fill="#45317f">Independent judge</text>
+      <text x="1350" y="326" text-anchor="middle" font-size="19" fill="#45317f">acceptance criteria, with evidence · runs the tests · never trusts "done"</text></g>
+    <g font-size="22" font-weight="800" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">
+      <g class="a-pop" style="--d:2.2s"><rect x="1080" y="350" width="160" height="46" rx="12" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2"/><text x="1160" y="381" text-anchor="middle" fill="#1f5f33">AC1 ✓</text></g>
+      <g class="a-pop" style="--d:2.45s"><rect x="1270" y="350" width="160" height="46" rx="12" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2"/><text x="1350" y="381" text-anchor="middle" fill="#1f5f33">AC2 ✓</text></g>
+      <g class="a-pop" style="--d:2.7s"><rect x="1460" y="350" width="160" height="46" rx="12" fill="#fff3e0" stroke="#d9821c" stroke-width="2"/><text x="1540" y="381" text-anchor="middle" fill="#8a5300">AC3 ?</text></g>
+    </g>
+    <path class="a-fade" style="--d:2.9s" d="M995,335 L940,335" stroke="#d9821c" stroke-width="4" marker-end="url(#ma)"/>
+    <g class="a" style="--d:3.0s"><rect x="590" y="275" width="340" height="120" rx="20" fill="#fff3e0" stroke="#d9821c" stroke-width="2.5"/>
+      <text x="760" y="325" text-anchor="middle" font-size="30" font-weight="800" fill="#8a5300">Ask a human</text>
+      <text x="760" y="360" text-anchor="middle" font-size="19" fill="#6b4a14">the story pauses · asks inbox</text></g>
+    <path class="a-fade" style="--d:3.2s" d="M585,335 L530,335" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <g class="a" style="--d:3.3s"><rect x="260" y="275" width="260" height="120" rx="20" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2.5"/>
+      <text x="390" y="325" text-anchor="middle" font-size="30" font-weight="800" fill="#1f5f33">Human verdict</text>
+      <text x="390" y="360" text-anchor="middle" font-size="19" fill="#1f5f33">in the console</text></g>
+    <path class="a-fade" style="--d:3.5s" d="M390,400 L390,462" stroke="#0b3d5c" stroke-width="4" marker-end="url(#mn)"/>
+    <!-- row 3 -->
+    <g class="a" style="--d:3.6s"><rect x="260" y="470" width="260" height="110" rx="20" fill="#0b3d5c"/>
+      <text x="390" y="516" text-anchor="middle" font-size="30" font-weight="800" fill="#fff">Stagr gate</text>
+      <text x="390" y="550" text-anchor="middle" font-size="18" fill="#9fe0d4" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">stagr/governance</text></g>
+    <path class="a-fade" style="--d:3.75s" d="M525,525 L580,525" stroke="#0b3d5c" stroke-width="4" marker-end="url(#mn)"/>
+    <g class="a" style="--d:3.85s"><rect x="590" y="470" width="340" height="110" rx="20" fill="#e6f4ea" stroke="#2f8a4a" stroke-width="2.5"/>
+      <text x="760" y="516" text-anchor="middle" font-size="30" font-weight="800" fill="#1f5f33">Merge</text>
+      <text x="760" y="550" text-anchor="middle" font-size="19" fill="#1f5f33">by a human</text></g>
+    <path class="a-fade" style="--d:4.0s" d="M935,525 L990,525" stroke="#6b4fb3" stroke-width="4" marker-end="url(#mv)"/>
+    <g class="a" style="--d:4.1s"><rect x="1000" y="470" width="700" height="110" rx="20" fill="#f1edfa" stroke="#6b4fb3" stroke-width="2.5"/>
+      <text x="1350" y="516" text-anchor="middle" font-size="30" font-weight="800" fill="#45317f">Brain learns</text>
+      <text x="1350" y="550" text-anchor="middle" font-size="19" fill="#45317f">post-merge rescan · recurring review findings → proposed conventions</text></g>
+    <path class="a-draw" style="--d:4.3s;--len:1700" d="M1350,582 L1350,620 L125,620 L125,146" stroke="#c9bdea" stroke-width="4" fill="none" stroke-dasharray="10 8" marker-end="url(#mv)"/>
+  </svg>
+  <aside class="notes"><ul>
+    <li>Flow: intent → brain-grounded stories → human approves → story split into nanobots (small agents, each owning one task along a frozen contract, coordinating through CodeGuard) → independent judge checks the result against acceptance criteria with evidence (runs the tests, never trusts the agent's "done") → a question for a human pauses the story (asks inbox) → human verdict → Stagr gate → merge → brain learns (post-merge rescan; recurring review findings become proposed conventions).</li>
+    <li>Only the Stagr gate in this picture exists today.</li>
+  </ul></aside>
+</section>
+
+<!-- 15 HOW STAGR PLUGS IN -->
+<section class="slide" data-title="How Stagr plugs in">
+  <div class="vision-corner"><span class="badge vision">VISION · ROADMAP</span></div>
+  <div class="eyebrow" style="color:var(--violet)"><span class="n">10</span> CodeGuard AI · the joints</div>
+  <h2 class="a">Stagr plugs in through what it already is:<br>check runs and labels.</h2>
+  <div class="joints">
+    <div class="joint a" style="--d:.3s"><div class="flow"><span class="s">Stagr</span><span class="ar">→</span><span class="c">CodeGuard</span></div><h3>Check runs → console</h3><p><code>stagr/stage/*</code> and <code>stagr/governance</code> flow into the console as the audit trail of every change.</p></div>
+    <div class="joint a" style="--d:.55s"><div class="flow"><span class="c">CodeGuard</span><span class="ar">→</span><span class="s">Stagr</span></div><h3><code>codeguard/verdict</code></h3><p>CodeGuard posts its verdict as a check. Stagr reads it as an <b>observed stage</b> that blocks the merge.</p></div>
+    <div class="joint a" style="--d:.8s"><div class="flow"><span class="c">CodeGuard</span><span class="ar">→</span><span class="s">Stagr</span></div><h3>Story → issue label</h3><p>An approved story becomes an issue label, which starts Stagr's <code>implement</code> stage.</p></div>
+  </div>
+  <div class="honest">
+    <div class="now a" style="--d:1.1s"><h3>Honest status</h3>Stagr works today: 0.7.1, field-tested on a third-party repository.</div>
+    <div class="fut a" style="--d:1.3s"><h3>Where it's going</h3>CodeGuard AI is a prototype and a direction. These joints are designed or planned, not shipped.</div>
+  </div>
+  <aside class="notes"><ul>
+    <li>None of the joints needs Stagr to be running while the pipeline runs, so they stay within the control-plane rule.</li>
+  </ul></aside>
+</section>
+
+<!-- 16 WHY -->
+<section class="slide why" data-title="Why this shape wins">
+  <div class="eyebrow"><span class="n">11</span> Why this shape wins</div>
+  <h2 class="a">Most players race to be the agent or the model.<br>Stagr governs the agents a team already uses.</h2>
+  <div class="grid g2">
+    <div class="card t a" style="--d:.3s"><h3>Composes, never competes</h3><p>Codex and Claude keep improving; Stagr improves with them. Switching a backend is a config change.</p></div>
+    <div class="card n a" style="--d:.45s"><h3>Governance people can trust</h3><p>Signed, commit-bound check runs. Fail-closed. Secrets by name. Pinned actions. "Provably ready" is a checklist.</p></div>
+    <div class="card g a" style="--d:.6s"><h3>Small to adopt</h3><p>A 3-line config at minimum, one App, a few secrets. No hosted service, no runtime dependency on Stagr.</p></div>
+    <div class="card am a" style="--d:.75s"><h3>Shown, not claimed</h3><p>A field test on someone else's app, real defects fixed. Built with its own process: 104 PRs, 754 tests.</p></div>
+  </div>
+  <div class="rule a" style="--d:1.0s;margin-top:34px"><div class="big">Humans keep<br><span>the final word</span></div><p>The gate says <b>"Merge is eligible"</b>; a human merges. After the fix-round limit, the AI stops and hands the pull request to a human.</p></div>
+  <aside class="notes"><ul>
+    <li>Humans keep the final word: the gate says "Merge is eligible"; a human merges. After the round limit, the AI stops and hands over.</li>
+  </ul></aside>
+</section>
+
+<!-- 17 CLOSING -->
+<section class="slide dark" data-title="Closing">
+  <div class="eyebrow" style="color:var(--teal-bright)">Summary</div>
+  <h2 class="a">One file in. A governed lane out.<br>A human keeps the final word.</h2>
+  <div class="close-grid">
+    <div class="close-card now a" style="--d:.3s">
+      <div class="lbl">Shipped · 0.7.1</div>
+      <h3>Stagr</h3>
+      <div class="tl2">Works today.</div>
+      <ul><li>Codex reviews, Claude fixes, the gate decides</li><li>Signed, commit-bound, fail-closed</li><li>Field-tested: 11 PRs on a third-party app</li></ul>
+    </div>
+    <div class="close-card fut a" style="--d:.55s">
+      <div class="lbl">Vision · Roadmap</div>
+      <h3>CodeGuard AI</h3>
+      <div class="tl2">Where it's going.</div>
+      <ul><li>A brain that stays in the company network</li><li>Nanobots, an independent judge, human verdicts</li><li>Stagr as its CI backbone</li></ul>
+    </div>
+  </div>
+  <div class="foot a-fade" style="--d:.9s;bottom:96px"><span>Stagr 0.7.1</span><span>October 2026</span></div>
+  <aside class="notes"><ul>
+    <li>Stagr: works today. CodeGuard AI: where it's going.</li>
+  </ul></aside>
+</section>
+
+</div></div>
+
+<div id="ui"><button class="navbtn" id="prev" aria-label="Previous slide">‹</button><div id="dots"></div><button class="navbtn" id="next" aria-label="Next slide">›</button></div>
+<div id="counter"></div>
+<div id="hint">← → navigate · N notes</div>
+<div id="notesPanel"><h4 id="notesTitle">Speaker notes</h4><div id="notesBody"></div></div>
+
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  if (params.has('static')) document.documentElement.classList.add('static');
+  if (params.has('clean')) document.documentElement.classList.add('clean');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var stage = document.getElementById('stage');
+  var dots = document.getElementById('dots');
+  var counter = document.getElementById('counter');
+  var current = -1;
+
+  function fit(){
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = 'translate(' + (-960 * scale) + 'px,' + (-540 * scale) + 'px) scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  slides.forEach(function(slide, index){
+    slide.id = 'slide-' + (index + 1);
+    var dot = document.createElement('button');
+    dot.title = (index + 1) + ' · ' + (slide.dataset.title || '');
+    if (slide.querySelector('.badge.vision')) dot.classList.add('vis');
+    dot.addEventListener('click', function(){ go(index); });
+    dots.appendChild(dot);
+  });
+
+  function countUp(slide){
+    if (reduce || document.documentElement.classList.contains('static')) return;
+    slide.querySelectorAll('[data-count]').forEach(function(element){
+      var target = parseInt(element.dataset.count, 10), start = null, duration = 1400;
+      function frame(timestamp){
+        if (start === null) start = timestamp;
+        var progress = Math.min(1, (timestamp - start) / duration);
+        element.textContent = Math.round(target * (1 - Math.pow(1 - progress, 3)));
+        if (progress < 1) requestAnimationFrame(frame); else element.textContent = target;
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function go(index, fromHash){
+    index = Math.max(0, Math.min(slides.length - 1, index));
+    if (index === current) return;
+    if (current >= 0) slides[current].classList.remove('active');
+    current = index;
+    var slide = slides[current];
+    void slide.offsetWidth;
+    slide.classList.add('active');
+    Array.prototype.forEach.call(dots.children, function(dot, dotIndex){ dot.classList.toggle('on', dotIndex === current); });
+    counter.textContent = (current + 1) + ' / ' + slides.length;
+    var notes = slide.querySelector('.notes');
+    document.getElementById('notesTitle').textContent = 'Speaker notes · ' + (current + 1) + ' · ' + (slide.dataset.title || '');
+    document.getElementById('notesBody').innerHTML = notes ? notes.innerHTML : '<p>No notes.</p>';
+    if (!fromHash) history.replaceState(null, '', '#slide-' + (current + 1));
+    countUp(slide);
+  }
+
+  function indexFromHash(){
+    var match = /^#slide-(\d+)$/.exec(location.hash);
+    return match ? parseInt(match[1], 10) - 1 : 0;
+  }
+  window.addEventListener('hashchange', function(){ go(indexFromHash(), true); });
+
+  document.addEventListener('keydown', function(event){
+    var key = event.key;
+    if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') { event.preventDefault(); go(current + 1); }
+    else if (key === 'ArrowLeft' || key === 'PageUp') { event.preventDefault(); go(current - 1); }
+    else if (key === 'Home') { event.preventDefault(); go(0); }
+    else if (key === 'End') { event.preventDefault(); go(slides.length - 1); }
+    else if (key === 'n' || key === 'N') { document.body.classList.toggle('notes-on'); }
+  });
+  document.getElementById('prev').addEventListener('click', function(){ go(current - 1); });
+  document.getElementById('next').addEventListener('click', function(){ go(current + 1); });
+
+  window.addEventListener('beforeprint', function(){ slides.forEach(function(slide){ slide.querySelectorAll('[data-count]').forEach(function(element){ element.textContent = element.dataset.count; }); }); });
+
+  go(indexFromHash(), true);
+})();
+</script>
+</body>
+</html>
